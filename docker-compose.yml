@@ -1,0 +1,72 @@
+# (documentación)
+# Frontend: pendiente — se construirá en feature/frontend-base por Yorman
+#
+# Servicios:
+#   frontend   → Vue 3 (proyecto frontend/)
+#   backend    → Express API
+#   worker     → proceso Node.js independiente
+#   mongoserver → base de datos (volumen mongo-data)
+#   redisserver → Redis (caché + cola)
+
+services:
+  frontend:
+    build:
+      context: ./frontend
+    container_name: taskflow-frontend
+    ports:
+      - "5173:80"
+    depends_on:
+      - backend
+    restart: unless-stopped
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.api
+    container_name: taskflow-backend
+    environment:
+      PORT: 3000
+      MONGO_URL: mongodb://mongoserver:27017/taskflow
+      REDIS_URL: redis://redisserver:6379
+      FRONTEND_URL: http://localhost:5173
+      CACHE_TTL: 60
+    ports:
+      - "3000:3000"
+    depends_on:
+      - mongoserver
+      - redisserver
+    restart: unless-stopped
+
+  worker:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.worker
+    container_name: taskflow-worker
+    environment:
+      MONGO_URL: mongodb://mongoserver:27017/taskflow
+      REDIS_URL: redis://redisserver:6379
+      QUEUE_NAME: taskflow:cola
+      EVENTS_CHANNEL: taskflow:eventos
+    depends_on:
+      - mongoserver
+      - redisserver
+    restart: unless-stopped
+
+  mongoserver:
+    image: mongo:7
+    container_name: taskflow-mongo
+    ports:
+      - "27018:27017"
+    volumes:
+      - mongo-data:/data/db
+    restart: unless-stopped
+
+  redisserver:
+    image: redis:7-alpine
+    container_name: taskflow-redis
+    ports:
+      - "6379:6379"
+    restart: unless-stopped
+
+volumes:
+  mongo-data:
