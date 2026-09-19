@@ -16,6 +16,41 @@
       <RouterLink to="/monitor" class="btn btn-secondary">Monitor</RouterLink>
     </div>
 
+    <section class="card mt-3 prueba-card">
+      <div class="prueba-header">
+        <div>
+          <h2 class="section-title">Modo prueba de carga</h2>
+          <p class="muted">Envía muchas solicitudes a la vez para probar la cola y el worker.</p>
+        </div>
+        <button
+          type="button"
+          class="switch"
+          :class="{ on: pruebaActiva }"
+          role="switch"
+          :aria-checked="pruebaActiva"
+          :disabled="enviandoPrueba"
+          @click="alternarPrueba"
+        >
+          <span class="switch-thumb"></span>
+        </button>
+      </div>
+
+      <div class="prueba-opciones">
+        <label class="label" for="cantidad-prueba">Cantidad por lote</label>
+        <select id="cantidad-prueba" v-model="cantidadPrueba" class="select" :disabled="pruebaActiva">
+          <option :value="10">10 solicitudes</option>
+          <option :value="25">25 solicitudes</option>
+          <option :value="50">50 solicitudes</option>
+          <option :value="100">100 solicitudes</option>
+        </select>
+      </div>
+
+      <p v-if="enviandoPrueba" class="muted">Enviando lote...</p>
+      <p v-else-if="resultadoPrueba" class="prueba-resultado">
+        {{ resultadoPrueba }}
+      </p>
+    </section>
+
     <section class="card mt-3">
       <h2 class="section-title">Solicitudes recientes</h2>
       <p v-if="cargando" class="muted">Cargando...</p>
@@ -35,13 +70,14 @@
 </template>
 
 <script setup>
-  import { onMounted, computed } from 'vue';
+  import { onMounted, computed, ref } from 'vue';
   import { RouterLink } from 'vue-router';
   import StatCard from '../components/StatCard.vue';
   import StatusBadge from '../components/Status/StatusBadge.vue';
   import { useRequestStore } from '../store/requestStore.js';
   import { useSocket } from '../composables/useSocket.js';
   import { useToast } from '../composables/useToast.js';
+  import * as requestService from '../services/requestService.js';
 
   const store = useRequestStore();
   const toast = useToast();
@@ -49,6 +85,31 @@
   const stats = computed(() => store.estadisticas);
 
   const recientes = computed(() => store.solicitudes.slice(0, 5));
+
+  const pruebaActiva = ref(false);
+  const enviandoPrueba = ref(false);
+  const cantidadPrueba = ref(10);
+  const resultadoPrueba = ref('');
+
+  async function alternarPrueba() {
+    if (enviandoPrueba.value) return;
+    pruebaActiva.value = true;
+    enviandoPrueba.value = true;
+    resultadoPrueba.value = '';
+    try {
+      const resultados = await requestService.enviarLotePrueba(cantidadPrueba.value);
+      const ok = resultados.filter((r) => r.ok).length;
+      const mal = resultados.length - ok;
+      resultadoPrueba.value = `Lote enviado: ${ok} aceptadas, ${mal} con error.`;
+      toast.success(`Se enviaron ${ok} solicitudes de prueba`);
+    } catch (err) {
+      toast.error('Error al enviar el lote de prueba');
+    } finally {
+      pruebaActiva.value = false;
+      enviandoPrueba.value = false;
+      actualizarTodo();
+    }
+  }
 
   async function actualizarTodo() {
     await Promise.all([store.cargarSolicitudes(), store.cargarMonitor()]);
@@ -69,6 +130,70 @@
   .dashboard-actions {
     display: flex;
     gap: 0.75rem;
+  }
+
+  .prueba-card {
+    max-width: 640px;
+  }
+
+  .prueba-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+
+  .prueba-header .section-title {
+    margin-bottom: 0.25rem;
+  }
+
+  .prueba-opciones {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-top: 1rem;
+  }
+
+  .prueba-resultado {
+    margin-top: 0.75rem;
+    color: var(--color-success);
+    font-weight: 600;
+  }
+
+  .switch {
+    width: 44px;
+    height: 24px;
+    border-radius: 999px;
+    background: #cbd5e1;
+    border: none;
+    position: relative;
+    cursor: pointer;
+    transition: background-color 0.2s;
+    flex-shrink: 0;
+  }
+
+  .switch.on {
+    background: var(--color-success);
+  }
+
+  .switch:disabled {
+    opacity: 0.6;
+    cursor: wait;
+  }
+
+  .switch-thumb {
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: #fff;
+    transition: transform 0.2s;
+  }
+
+  .switch.on .switch-thumb {
+    transform: translateX(20px);
   }
 
   .section-title {
