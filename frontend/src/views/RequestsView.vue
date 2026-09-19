@@ -18,6 +18,12 @@
         <option value="ERROR">Error</option>
       </select>
 
+      <select v-model="filtros.activo" class="select filter-input" @change="cargar">
+        <option value="">Activa e inactiva</option>
+        <option :value="true">Activa</option>
+        <option :value="false">Inactiva</option>
+      </select>
+
       <select v-model="filtros.categoria" class="select filter-input" @change="cargar">
         <option value="">Todas las categorías</option>
         <option v-for="c in categorias" :key="c" :value="c">{{ c }}</option>
@@ -47,6 +53,7 @@
             <th>Categoría</th>
             <th>Prioridad</th>
             <th>Estado</th>
+            <th>Activa</th>
             <th>Fecha</th>
             <th></th>
           </tr>
@@ -58,6 +65,11 @@
             <td>{{ s.categoria }}</td>
             <td>{{ s.prioridad }}</td>
             <td><StatusBadge :estado="s.estado" /></td>
+            <td>
+              <span class="activo-badge" :class="{ off: s.activo === false }">
+                {{ s.activo === false ? 'Inactiva' : 'Activa' }}
+              </span>
+            </td>
             <td class="muted">{{ formatoFecha(s.createdAt) }}</td>
             <td>
               <RouterLink :to="`/solicitudes/${s.id}`" class="btn btn-secondary btn-sm">
@@ -89,7 +101,8 @@
   const filtros = reactive({
     q: '',
     estado: '',
-    categoria: ''
+    categoria: '',
+    activo: ''
   });
 
   let timerBusqueda = null;
@@ -97,7 +110,11 @@
   async function cargar() {
     cargando.value = true;
     try {
-      await store.cargarSolicitudes({ ...filtros });
+      const params = {
+        ...filtros,
+        activo: filtros.activo === '' ? '' : filtros.activo
+      };
+      await store.cargarSolicitudes(params);
     } finally {
       cargando.value = false;
     }
@@ -112,6 +129,7 @@
     filtros.q = '';
     filtros.estado = '';
     filtros.categoria = '';
+    filtros.activo = '';
     cargar();
   }
 
@@ -177,6 +195,21 @@
 
   .col-titulo {
     font-weight: 600;
+  }
+
+  .activo-badge {
+    display: inline-block;
+    padding: 0.25rem 0.75rem;
+    border-radius: 999px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    background: #dcfce7;
+    color: #166534;
+  }
+
+  .activo-badge.off {
+    background: #f3f4f6;
+    color: var(--color-text-muted);
   }
 
   .btn-sm {
