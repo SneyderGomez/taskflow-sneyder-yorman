@@ -15,7 +15,11 @@ export const useRequestStore = defineStore('requests', {
     },
     cargando: false,
     error: null,
-    ultimaFuente: null
+    ultimaFuente: null,
+    totalItems: 0,
+    totalPaginas: 1,
+    paginaActual: 1,
+    porPagina: 10
   }),
 
   getters: {
@@ -33,6 +37,10 @@ export const useRequestStore = defineStore('requests', {
         const respuesta = await requestService.listarSolicitudes(filtros);
         this.solicitudes = respuesta.solicitudes;
         this.ultimaFuente = respuesta.fuente;
+        this.totalItems = respuesta.total ?? this.solicitudes.length;
+        this.totalPaginas = respuesta.totalPaginas ?? 1;
+        this.paginaActual = respuesta.pagina ?? 1;
+        this.porPagina = respuesta.porPagina ?? 10;
       } catch (err) {
         this.error = err.response?.data?.mensaje || 'Error al consultar solicitudes';
       } finally {

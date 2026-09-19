@@ -15,7 +15,9 @@ export async function listar(req, res, next) {
       categoria: req.query.categoria,
       prioridad: req.query.prioridad,
       activo: req.query.activo,
-      q: req.query.q
+      q: req.query.q,
+      pagina: req.query.pagina || 1,
+      porPagina: req.query.porPagina || 10
     };
 
     const { redis } = req;
@@ -23,13 +25,13 @@ export async function listar(req, res, next) {
 
     const cached = await redisService.getFromCache(redis, cacheKey);
     if (cached) {
-      return res.json({ ok: true, fuente: 'CACHE HIT', solicitudes: cached });
+      return res.json({ ok: true, fuente: 'CACHE HIT', ...cached });
     }
 
-    const solicitudes = await solicitudService.listarSolicitudes(params);
-    await redisService.setInCache(redis, cacheKey, solicitudes);
+    const resultado = await solicitudService.listarSolicitudes(params);
+    await redisService.setInCache(redis, cacheKey, resultado);
 
-    res.json({ ok: true, fuente: 'CACHE MISS', solicitudes });
+    res.json({ ok: true, fuente: 'CACHE MISS', ...resultado });
   } catch (err) {
     next(err);
   }

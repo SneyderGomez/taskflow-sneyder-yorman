@@ -91,6 +91,29 @@
           </tr>
         </tbody>
       </table>
+
+      <div class="paginador">
+        <button
+          type="button"
+          class="btn btn-secondary btn-sm"
+          :disabled="store.paginaActual <= 1 || cargando"
+          @click="irPagina(store.paginaActual - 1)"
+        >
+          Anterior
+        </button>
+        <span class="paginador-info">
+          Página {{ store.paginaActual }} de {{ store.totalPaginas }}
+          ({{ store.totalItems }} en total)
+        </span>
+        <button
+          type="button"
+          class="btn btn-secondary btn-sm"
+          :disabled="store.paginaActual >= store.totalPaginas || cargando"
+          @click="irPagina(store.paginaActual + 1)"
+        >
+          Siguiente
+        </button>
+      </div>
     </div>
   </div>
 </template>
@@ -154,6 +177,15 @@
     } finally {
       cargando.value = false;
     }
+  }
+
+  async function irPagina(pagina) {
+    if (pagina < 1 || pagina > store.totalPaginas) return;
+    await store.cargarSolicitudes({
+      ...filtros,
+      activo: filtros.activo === '' ? '' : filtros.activo,
+      pagina
+    });
   }
 
   function buscar() {
@@ -260,5 +292,20 @@
   .btn-sm {
     padding: 0.35rem 0.75rem;
     font-size: 0.8rem;
+  }
+
+  .paginador {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+    padding-top: 0.9rem;
+    border-top: 1px solid var(--color-border);
+    flex-wrap: wrap;
+  }
+
+  .paginador-info {
+    font-size: 0.85rem;
+    color: var(--color-text-muted);
   }
 </style>

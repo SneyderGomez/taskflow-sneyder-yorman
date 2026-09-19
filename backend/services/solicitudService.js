@@ -5,7 +5,7 @@ export function buildSolicitudFromBody(body) {
   return new Solicitud({ titulo, descripcion, categoria, prioridad });
 }
 
-export async function listarSolicitudes({ estado, categoria, prioridad, activo, q } = {}) {
+export async function listarSolicitudes({ estado, categoria, prioridad, activo, q, pagina = 1, porPagina = 10 } = {}) {
   const filtro = {};
   if (estado) filtro.estado = estado;
   if (categoria) filtro.categoria = categoria;
@@ -19,7 +19,25 @@ export async function listarSolicitudes({ estado, categoria, prioridad, activo, 
       { descripcion: { $regex: q, $options: 'i' } }
     ];
   }
-  return Solicitud.find(filtro).sort({ createdAt: -1 });
+
+  const porPaginaValido = Math.min(Math.max(Number(porPagina) || 10, 1), 100);
+  const paginaValida = Math.max(Number(pagina) || 1, 1);
+
+  const [solicitudes, total] = await Promise.all([
+    Solicitud.find(filtro)
+      .sort({ createdAt: -1 })
+      .skip((paginaValida - 1) * porPaginaValido)
+      .limit(porPaginaValido),
+    Solicitud.countDocuments(filtro)
+  ]);
+
+  return {
+    solicitudes,
+    total,
+    pagina: paginaValida,
+    porPagina: porPaginaValido,
+    totalPaginas: Math.max(Math.ceil(total / porPaginaValido), 1)
+  };
 }
 
 export async function obtenerSolicitudPorId(id) {
