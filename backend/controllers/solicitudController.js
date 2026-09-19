@@ -80,6 +80,27 @@ export async function crear(req, res, next) {
   }
 }
 
+export async function cambiarActivo(req, res, next) {
+  try {
+    const { activo } = req.body;
+    if (typeof activo !== 'boolean') {
+      return res.status(400).json({ ok: false, mensaje: 'El campo "activo" debe ser booleano' });
+    }
+
+    const solicitud = await solicitudService.cambiarActivo(req.params.id, activo);
+    if (!solicitud) {
+      return res.status(404).json({ ok: false, mensaje: 'Solicitud no encontrada' });
+    }
+
+    await redisService.deleteFromCache(req.redis, listKey('solicitudes'));
+    await redisService.deleteFromCache(req.redis, listKey('solicitudes', { id: req.params.id }));
+
+    res.json({ ok: true, solicitud });
+  } catch (err) {
+    next(err);
+  }
+}
+
 export async function eliminar(req, res, next) {
   try {
     const result = await solicitudService.eliminarSolicitud(req.params.id);

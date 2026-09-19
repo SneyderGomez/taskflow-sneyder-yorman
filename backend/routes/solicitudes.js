@@ -7,6 +7,7 @@ const router = Router();
 router.get('/', controller.listar);
 router.get('/:id', controller.obtenerPorId);
 router.post('/', validarSolicitud, controller.crear);
+router.patch('/:id/activo', controller.cambiarActivo);
 router.delete('/:id', controller.eliminar);
 
 export default router;

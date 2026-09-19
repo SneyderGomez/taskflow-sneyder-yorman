@@ -33,7 +33,24 @@
           </div>
           <div class="detail-row">
             <dt>Estado</dt>
-            <dd>{{ textoEstado(solicitud.estado) }}</dd>
+            <dd>
+              {{ textoEstado(solicitud.estado) }}
+              <span class="muted"> • Activa:&nbsp;</span>
+              <button
+                type="button"
+                class="switch"
+                :class="{ on: solicitud.activo }"
+                role="switch"
+                :aria-checked="solicitud.activo"
+                :disabled="guardandoActivo"
+                @click="alternarActivo"
+              >
+                <span class="switch-thumb"></span>
+              </button>
+              <span class="switch-label" :class="{ off: !solicitud.activo }">
+                {{ solicitud.activo ? 'Sí' : 'No' }}
+              </span>
+            </dd>
           </div>
           <div class="detail-row">
             <dt>Creada</dt>
@@ -85,6 +102,22 @@
   const solicitud = ref(null);
   const cargando = ref(true);
   const error = ref(null);
+  const guardandoActivo = ref(false);
+
+  async function alternarActivo() {
+    if (!solicitud.value) return;
+    const nuevoValor = !solicitud.value.activo;
+    guardandoActivo.value = true;
+    try {
+      const data = await requestService.cambiarActivoSolicitud(route.params.id, nuevoValor);
+      solicitud.value = data.solicitud;
+      toast.success(nuevoValor ? 'Solicitud activada' : 'Solicitud desactivada');
+    } catch (err) {
+      toast.error(err.response?.data?.mensaje || 'Error al cambiar el estado de la solicitud');
+    } finally {
+      guardandoActivo.value = false;
+    }
+  }
 
   async function cargar() {
     cargando.value = true;
@@ -172,6 +205,51 @@
     border-radius: 8px;
     padding: 0.85rem 1rem;
     line-height: 1.5;
+  }
+
+  .switch {
+    width: 44px;
+    height: 24px;
+    border-radius: 999px;
+    background: #cbd5e1;
+    border: none;
+    position: relative;
+    cursor: pointer;
+    transition: background-color 0.2s;
+    vertical-align: middle;
+  }
+
+  .switch.on {
+    background: var(--color-success);
+  }
+
+  .switch:disabled {
+    opacity: 0.6;
+    cursor: wait;
+  }
+
+  .switch-thumb {
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: #fff;
+    transition: transform 0.2s;
+  }
+
+  .switch.on .switch-thumb {
+    transform: translateX(20px);
+  }
+
+  .switch-label {
+    font-weight: 700;
+    color: var(--color-success);
+  }
+
+  .switch-label.off {
+    color: var(--color-text-muted);
   }
 
   @media (max-width: 768px) {

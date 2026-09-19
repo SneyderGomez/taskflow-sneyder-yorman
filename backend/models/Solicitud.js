@@ -13,6 +13,7 @@ const solicitudSchema = new mongoose.Schema(
     categoria: { type: String, required: true, enum: CATEGORIAS },
     prioridad: { type: String, required: true, enum: PRIORIDADES },
     estado: { type: String, enum: ESTADOS, default: 'PENDIENTE' },
+    activo: { type: Boolean, default: true },
     respuesta: { type: String, default: null },
     error: { type: String, default: null },
     fechaProcesamiento: { type: Date, default: null }
