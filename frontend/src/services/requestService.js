@@ -2,7 +2,7 @@ import http from '../plugins/axios.js';
 
 export async function listarSolicitudes(filtros = {}) {
   const params = Object.fromEntries(
-    Object.entries(filtros).filter(([, v]) => v)
+    Object.entries(filtros).filter(([, v]) => v !== undefined && v !== null && v !== '')
   );
   const { data } = await http.get('/solicitudes', { params });
   return data;

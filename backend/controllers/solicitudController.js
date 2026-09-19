@@ -14,6 +14,7 @@ export async function listar(req, res, next) {
       estado: req.query.estado,
       categoria: req.query.categoria,
       prioridad: req.query.prioridad,
+      activo: req.query.activo,
       q: req.query.q
     };
 

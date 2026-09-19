@@ -5,11 +5,14 @@ export function buildSolicitudFromBody(body) {
   return new Solicitud({ titulo, descripcion, categoria, prioridad });
 }
 
-export async function listarSolicitudes({ estado, categoria, prioridad, q } = {}) {
+export async function listarSolicitudes({ estado, categoria, prioridad, activo, q } = {}) {
   const filtro = {};
   if (estado) filtro.estado = estado;
   if (categoria) filtro.categoria = categoria;
   if (prioridad) filtro.prioridad = prioridad;
+  if (activo !== undefined && activo !== '') {
+    filtro.activo = activo === 'true' || activo === true;
+  }
   if (q) {
     filtro.$or = [
       { titulo: { $regex: q, $options: 'i' } },
