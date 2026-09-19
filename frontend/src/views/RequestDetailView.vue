@@ -43,7 +43,7 @@
                 role="switch"
                 :aria-checked="solicitud.activo"
                 :disabled="guardandoActivo"
-                @click="alternarActivo"
+                @click="pedirConfirmacion"
               >
                 <span class="switch-thumb"></span>
               </button>
@@ -83,6 +83,22 @@
         </div>
       </div>
     </div>
+
+    <div v-if="mostrarConfirmacion" class="modal-overlay" @click.self="cancelarConfirmacion">
+      <div class="modal" role="dialog" aria-modal="true">
+        <h3 class="modal-title">
+          {{ solicitud.activo ? 'Desactivar solicitud' : 'Activar solicitud' }}
+        </h3>
+        <p class="modal-text">
+          ¿Seguro que deseas {{ solicitud.activo ? 'desactivar' : 'activar' }} la solicitud
+          <strong>#{{ solicitud.id.slice(-6).toUpperCase() }}</strong>?
+        </p>
+        <div class="modal-actions">
+          <button type="button" class="btn btn-secondary" @click="cancelarConfirmacion">Cancelar</button>
+          <button type="button" class="btn btn-primary" @click="confirmarToggle">Sí, confirmar</button>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -103,6 +119,21 @@
   const cargando = ref(true);
   const error = ref(null);
   const guardandoActivo = ref(false);
+  const mostrarConfirmacion = ref(false);
+
+  function pedirConfirmacion() {
+    if (!solicitud.value) return;
+    mostrarConfirmacion.value = true;
+  }
+
+  function cancelarConfirmacion() {
+    mostrarConfirmacion.value = false;
+  }
+
+  async function confirmarToggle() {
+    mostrarConfirmacion.value = false;
+    await alternarActivo();
+  }
 
   async function alternarActivo() {
     if (!solicitud.value) return;
@@ -250,6 +281,41 @@
 
   .switch-label.off {
     color: var(--color-text-muted);
+  }
+
+  .modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 100;
+  }
+
+  .modal {
+    background: #fff;
+    border-radius: 10px;
+    padding: 1.5rem;
+    max-width: 400px;
+    width: 90%;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+  }
+
+  .modal-title {
+    margin: 0 0 0.5rem;
+    font-size: 1.1rem;
+  }
+
+  .modal-text {
+    margin: 0 0 1.25rem;
+    line-height: 1.5;
+  }
+
+  .modal-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.75rem;
   }
 
   @media (max-width: 768px) {
