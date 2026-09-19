@@ -13,7 +13,6 @@
     </div>
 
     <div class="dashboard-actions mt-3">
-      <RouterLink to="/solicitudes/nueva" class="btn btn-primary">Nueva solicitud</RouterLink>
       <RouterLink to="/monitor" class="btn btn-secondary">Monitor</RouterLink>
     </div>
 

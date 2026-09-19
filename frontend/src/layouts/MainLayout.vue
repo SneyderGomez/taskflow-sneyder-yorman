@@ -7,7 +7,6 @@
       <nav class="nav">
         <RouterLink to="/dashboard" class="nav-link" active-class="active">Dashboard</RouterLink>
         <RouterLink to="/solicitudes" class="nav-link" active-class="active">Solicitudes</RouterLink>
-        <RouterLink to="/solicitudes/nueva" class="nav-link" active-class="active">Nueva solicitud</RouterLink>
         <RouterLink to="/monitor" class="nav-link" active-class="active">Monitor</RouterLink>
       </nav>
     </aside>

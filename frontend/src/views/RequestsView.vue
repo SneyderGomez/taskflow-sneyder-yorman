@@ -29,7 +29,19 @@
         <option v-for="c in categorias" :key="c" :value="c">{{ c }}</option>
       </select>
 
+      <button type="button" class="btn btn-primary" @click="alternarFormulario">
+        {{ mostrandoFormulario ? 'Cerrar formulario' : 'Nueva solicitud' }}
+      </button>
       <button type="button" class="btn btn-secondary" @click="limpiar">Limpiar</button>
+    </div>
+
+    <div v-if="mostrandoFormulario" class="card mt-2 new-request">
+      <h2 class="section-title">Registrar nueva solicitud</h2>
+      <RequestForm
+        :key="formKey"
+        @enviar="registrar"
+        @cancelar="cerrarFormulario"
+      />
     </div>
 
     <div class="toolbar-msg muted" :class="{ hit: store.ultimaFuente }">
@@ -87,6 +99,7 @@
   import { onMounted, reactive, ref } from 'vue';
   import { RouterLink } from 'vue-router';
   import StatusBadge from '../components/Status/StatusBadge.vue';
+  import RequestForm from '../components/Requests/RequestForm.vue';
   import { useRequestStore } from '../store/requestStore.js';
   import { useSocket } from '../composables/useSocket.js';
   import { formatoFecha } from '../utils/formatDate.js';
@@ -97,6 +110,29 @@
   const toast = useToast();
   const cargando = ref(false);
   const categorias = CATEGORIAS;
+
+  const mostrandoFormulario = ref(false);
+  const formKey = ref(0);
+
+  function alternarFormulario() {
+    mostrandoFormulario.value = !mostrandoFormulario.value;
+  }
+
+  function cerrarFormulario() {
+    mostrandoFormulario.value = false;
+  }
+
+  async function registrar(datos) {
+    const res = await store.registrarSolicitud(datos);
+    if (res.ok) {
+      toast.success('Solicitud registrada correctamente');
+      formKey.value++;
+      cerrarFormulario();
+      cargar();
+    } else {
+      toast.error(res.errores.join(' '));
+    }
+  }
 
   const filtros = reactive({
     q: '',
@@ -162,6 +198,15 @@
 
   .toolbar-msg.hit { color: var(--color-success); }
   .error-color { color: var(--color-danger); }
+
+  .new-request {
+    max-width: 720px;
+  }
+
+  .section-title {
+    font-size: 1.1rem;
+    margin-bottom: 1rem;
+  }
 
   .table-wrap {
     overflow-x: auto;
