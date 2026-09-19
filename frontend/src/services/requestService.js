@@ -23,6 +23,11 @@ export async function eliminarSolicitud(id) {
   return data;
 }
 
+export async function cambiarActivoSolicitud(id, activo) {
+  const { data } = await http.patch(`/solicitudes/${id}/activo`, { activo });
+  return data;
+}
+
 export async function consultarMonitor() {
   const { data } = await http.get('/monitor');
   return data;

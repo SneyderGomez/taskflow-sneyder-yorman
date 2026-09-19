@@ -46,3 +46,11 @@ export async function contarPorEstados() {
 export async function eliminarSolicitud(id) {
   return Solicitud.findByIdAndDelete(id);
 }
+
+export async function cambiarActivo(id, activo) {
+  return Solicitud.findByIdAndUpdate(
+    id,
+    { activo },
+    { new: true }
+  );
+}
